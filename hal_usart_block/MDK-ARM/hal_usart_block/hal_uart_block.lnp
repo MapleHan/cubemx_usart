@@ -1,0 +1,26 @@
+--cpu Cortex-M3
+"hal_uart_block\startup_stm32f103xe.o"
+"hal_uart_block\main.o"
+"hal_uart_block\gpio.o"
+"hal_uart_block\usart.o"
+"hal_uart_block\stm32f1xx_it.o"
+"hal_uart_block\stm32f1xx_hal_msp.o"
+"hal_uart_block\stm32f1xx_hal_gpio_ex.o"
+"hal_uart_block\stm32f1xx_hal_tim.o"
+"hal_uart_block\stm32f1xx_hal_tim_ex.o"
+"hal_uart_block\stm32f1xx_hal_uart.o"
+"hal_uart_block\stm32f1xx_hal.o"
+"hal_uart_block\stm32f1xx_hal_rcc.o"
+"hal_uart_block\stm32f1xx_hal_rcc_ex.o"
+"hal_uart_block\stm32f1xx_hal_gpio.o"
+"hal_uart_block\stm32f1xx_hal_dma.o"
+"hal_uart_block\stm32f1xx_hal_cortex.o"
+"hal_uart_block\stm32f1xx_hal_pwr.o"
+"hal_uart_block\stm32f1xx_hal_flash.o"
+"hal_uart_block\stm32f1xx_hal_flash_ex.o"
+"hal_uart_block\stm32f1xx_hal_exti.o"
+"hal_uart_block\system_stm32f1xx.o"
+--library_type=microlib --strict --scatter "hal_uart_block\hal_uart_block.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "hal_uart_block.map" -o hal_uart_block\hal_uart_block.axf
