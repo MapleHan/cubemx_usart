@@ -89,7 +89,19 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	UART_Buffer_Start(&uart1_buffer,&huart1);
+	UART_Buffer_Start(&uart1_buffer,&huart1,1024,1024);
+	uint8_t test_data[1000];
+	for(int i=0;i<1000;i++)
+		test_data[i] = 'A'+i/40;
+	uint32_t t0 = HAL_GetTick();
+	HAL_UART_Transmit(&huart1,test_data,1000,1000);//×èÈû
+	uint32_t t1 = HAL_GetTick();
+	uint32_t dt = t1-t0;
+	DbgPrint("Delta T:%ld MS\r\n",dt);
+	UART_Buffer_Write_Arr(&uart1_buffer,test_data,1000);
+	uint32_t t2 = HAL_GetTick();
+	dt = t2-t1;
+	DbgPrint("Delta T:%ld MS\r\n",dt);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,19 +111,16 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		uint8_t test_data[1000];
-		for(int i=0;i<1000;i++)
-			test_data[i] = 'A'+i/40;
-		uint32_t t0 = HAL_GetTick();
-		HAL_UART_Transmit(&huart1,test_data,1000,1000);//×èÈû
-		uint32_t t1 = HAL_GetTick();
-		uint32_t dt = t1-t0;
-		DbgPrint("Delta T:%ld MS\r\n",dt);
-		UART_Buffer_Write_Arr(&uart1_buffer,test_data,1000);
-		uint32_t t2 = HAL_GetTick();
-		dt = t2-t1;
-		DbgPrint("Delta T:%ld MS\r\n",dt);
-		HAL_Delay(1000000);
+		uint16_t bn = UART_Buffer_Available(&uart1_buffer);
+		if(bn>0)
+		{
+			uint8_t receive[bn];
+			for(int i=0;i<bn;i++)
+			{
+				receive[i]=UART_Buffer_Read(&uart1_buffer);
+			}
+			UART_Buffer_Write_Arr(&uart1_buffer,receive,bn);
+		}
   }
   /* USER CODE END 3 */
 }

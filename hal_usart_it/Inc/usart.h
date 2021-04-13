@@ -43,7 +43,8 @@ typedef struct
   uint8_t recv;
   uint8_t* rx_buff;
   uint8_t* tx_buff;
-	uint16_t buff_size;
+	uint16_t tx_buff_size;
+	uint16_t rx_buff_size;
   uint16_t rx_tail;
   uint16_t tx_head;
   volatile uint16_t rx_head;
@@ -55,7 +56,7 @@ extern UART_BufferTypeDef uart1_buffer;
 void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-void UART_Buffer_Start(UART_BufferTypeDef *obj,UART_HandleTypeDef* huart);
+void UART_Buffer_Start(UART_BufferTypeDef *obj,UART_HandleTypeDef* huart,uint16_t tx_buffer_size,uint16_t rx_buffer_size);
 void UART_Buffer_End(UART_BufferTypeDef *obj);
 int UART_Buffer_Peek(UART_BufferTypeDef *obj);
 int UART_Buffer_Read(UART_BufferTypeDef *obj);

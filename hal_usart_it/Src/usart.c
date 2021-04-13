@@ -141,7 +141,7 @@ static int UART_Buffer_Rx_Complate(UART_BufferTypeDef *obj)
     return -1; /* Transaction ongoing */
   }
   unsigned char c = (unsigned char)(obj->recv);
-	uint16_t i = (unsigned int)(obj->rx_head + 1) % obj->buff_size;
+	uint16_t i = (unsigned int)(obj->rx_head + 1) % obj->rx_buff_size;
 	if (i != obj->rx_tail)
 	{
 		obj->rx_buff[obj->rx_head] = c;
@@ -155,7 +155,7 @@ static int UART_Buffer_Rx_Complate(UART_BufferTypeDef *obj)
 
 static int UART_Buffer_TX_Complate(UART_BufferTypeDef *obj)
 {
-	obj->tx_tail = (obj->tx_tail + 1) % obj->buff_size;
+	obj->tx_tail = (obj->tx_tail + 1) % obj->tx_buff_size;
   if (obj->tx_head == obj->tx_tail)
 	{
     return -1;
@@ -198,16 +198,22 @@ static void UART_Transmit_IT_Init(UART_BufferTypeDef *obj)
 	HAL_NVIC_SetPriority(UART_Get_IRQ(obj->huart_handle->Instance), 0, 0);
 	HAL_NVIC_EnableIRQ(UART_Get_IRQ(obj->huart_handle->Instance));
 }
-void UART_Buffer_Start(UART_BufferTypeDef *obj,UART_HandleTypeDef* huart)
+void UART_Buffer_Start(UART_BufferTypeDef *obj,UART_HandleTypeDef* huart,uint16_t tx_buffer_size,uint16_t rx_buffer_size)
 {
 		if(obj->init==1)
 		{
 			return;
 		}
 		obj->huart_handle = huart;
-		obj->buff_size = 1024;
-		obj->tx_buff = (uint8_t*)malloc(obj->buff_size*sizeof(uint8_t));
-		obj->rx_buff = (uint8_t*)malloc(obj->buff_size*sizeof(uint8_t));
+		obj->tx_buff_size = tx_buffer_size;
+		obj->rx_buff_size = rx_buffer_size;
+		obj->tx_buff = (uint8_t*)malloc(obj->tx_buff_size*sizeof(uint8_t));
+		obj->rx_buff = (uint8_t*)malloc(obj->rx_buff_size*sizeof(uint8_t));
+		if((obj->tx_buff==NULL)||(obj->rx_buff==NULL))
+		{
+			while(1)
+				;
+		}
 		obj->init=1;
 		if (UART_RX_Active(obj->huart_handle))
 		{
@@ -230,10 +236,13 @@ void UART_Buffer_End(UART_BufferTypeDef *obj)
 	}
 	UART_Buffer_Flush(obj);
 	HAL_UART_DeInit(obj->huart_handle);
-	free(obj->tx_buff);
-	free(obj->rx_buff);
+	if(obj->tx_buff!=NULL)
+		free(obj->tx_buff);
+	if(obj->rx_buff!=NULL)
+			free(obj->rx_buff);
 	obj->init=0;
-	obj->buff_size = 0;
+	obj->tx_buff_size = 0;
+	obj->rx_buff_size = 0;
 	obj->rx_head = obj->rx_tail = 0;
 }
 
@@ -251,7 +260,7 @@ int UART_Buffer_Read(UART_BufferTypeDef *obj)
     return -1;
   } else {
     unsigned char c = obj->rx_buff[obj->rx_tail];
-    obj->rx_tail = (uint16_t)(obj->rx_tail + 1) % obj->buff_size;
+    obj->rx_tail = (uint16_t)(obj->rx_tail + 1) % obj->rx_buff_size;
     return c;
   }
 }
@@ -269,7 +278,7 @@ size_t UART_Buffer_Write_Arr(UART_BufferTypeDef* obj,const uint8_t *buffer, size
 }
 size_t UART_Buffer_Write(UART_BufferTypeDef* obj,uint8_t c)
 {
-  uint16_t i = (obj->tx_head + 1) % obj->buff_size;
+  uint16_t i = (obj->tx_head + 1) % obj->tx_buff_size;
   while (i == obj->tx_tail) {
     // nop, the interrupt handler will free up space for us
   }
@@ -312,7 +321,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 
 int UART_Buffer_Available(UART_BufferTypeDef *obj)
 {
-	return ((unsigned int)(obj->buff_size + obj->rx_head - obj->rx_tail)) % obj->buff_size;
+	return ((unsigned int)(obj->rx_buff_size + obj->rx_head - obj->rx_tail)) % obj->rx_buff_size;
 }
 
 int UART_Buffer_Available_For_Write(UART_BufferTypeDef *obj)
@@ -321,7 +330,7 @@ int UART_Buffer_Available_For_Write(UART_BufferTypeDef *obj)
   uint16_t tail = obj->tx_tail;
 
   if (head >= tail) {
-    return obj->buff_size - 1 - head + tail;
+    return obj->tx_buff_size - 1 - head + tail;
   }
   return tail - head - 1;
 }
